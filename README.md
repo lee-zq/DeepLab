@@ -1,5 +1,5 @@
 # CNN-backbone
-This is a summary repository of the classic backbone of the CNNs
+This is a summary repository of the sota backbone of the CNNs
 ## Quickly start
 ### 1. Download CIFAR-10 Dataset
 Download the cifar-10 dataset and extract it to the `./Data` directory.   
