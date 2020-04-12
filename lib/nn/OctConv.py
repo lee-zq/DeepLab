@@ -5,12 +5,13 @@ This version use nn.Conv2d because alpha_in always equals alpha_out
 
 import torch
 import torch.nn as nn
+from torchsummary import summary
 
 class OctaveConv(nn.Module):
     """
     octconv的基础body模块,2输入2输出
     """
-    def __init__(self, in_channels, out_channels, kernel_size, alpha=0.5, stride=1, padding=1, dilation=1,
+    def __init__(self, in_channels, out_channels, kernel_size=(3,3), alpha=0.5, stride=1, padding=1, dilation=1,
                  groups=1, bias=False):
         super(OctaveConv, self).__init__()
         kernel_size = kernel_size[0]
@@ -66,7 +67,7 @@ class OctaveCB(nn.Module):
 
 class OctaveCBR(nn.Module):
     """
-    OctConv的body+BN+ReLU，单输入双输出，输出L部分的分辨率/2，H部分分辨率与输入相同
+    OctConv的body+BN+ReLU，2输入2输出，输出L部分的分辨率/2，H部分分辨率与输入相同
     """
     def __init__(self,in_channels, out_channels, kernel_size=(3,3),alpha=0.5, stride=1, padding=1, dilation=1,
                  groups=1, bias=False, norm_layer=nn.BatchNorm2d):
@@ -86,7 +87,7 @@ class FirstOctaveConv(nn.Module):
     """
     octconv的head，单输入双输出，输出L部分的分辨率/2，H部分分辨率与输入相同
     """
-    def __init__(self, in_channels, out_channels,kernel_size, alpha=0.5, stride=1, padding=1, dilation=1,
+    def __init__(self, in_channels, out_channels,kernel_size=(3,3), alpha=0.5, stride=1, padding=1, dilation=1,
                  groups=1, bias=False):
         super(FirstOctaveConv, self).__init__()
         self.stride = stride
@@ -149,7 +150,7 @@ class LastOctaveConv(nn.Module):
     """
     octconv的tail，双输入单输出，输出分辨率与输入H相同
     """
-    def __init__(self, in_channels, out_channels, kernel_size, alpha=0.5, stride=1, padding=1, dilation=1,
+    def __init__(self, in_channels, out_channels, kernel_size=(3,3), alpha=0.5, stride=1, padding=1, dilation=1,
                  groups=1, bias=False):
         super(LastOctaveConv, self).__init__()
         self.stride = stride
@@ -205,3 +206,16 @@ class LastOctaveCBR(nn.Module):
         x_h = self.conv(x)
         x_h = self.relu(self.bn_h(x_h))
         return x_h
+
+# 测试
+if __name__ == '__main__':
+    net_body = [FirstOctaveConv(64,128,alpha=0.5)] \
+               + [OctaveCBR(128,128,alpha=0.5)]*5 \
+               + [LastOctaveCBR(128,64,alpha=0.5)]
+
+    model = torch.nn.Sequential(*net_body)
+    model.add_module(name='tail',module=nn.Conv2d(64,3,3))
+    in_h = torch.randn(10,64,96,96)
+    out = model(in_h)
+    print(model,out.size())
+

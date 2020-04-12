@@ -5,7 +5,8 @@ import torchvision.transforms as transforms
 import torch.optim as optim
 import torch.nn as nn
 import argparse, os
-from utils.logger import Logger
+from utils.common import Logger, print_network
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -20,7 +21,7 @@ if __name__ == '__main__':
         os.makedirs(args.outf)  # 创建输出文件夹
     sys.stdout = Logger(os.path.join(args.outf, 'train_log.txt'))  # 创建日志
     # 训练参数设置(可变参数建议用parser加载)
-    EPOCH = 10  # 遍历数据集次数
+    EPOCH = 50  # 遍历数据集次数
     BATCH_SIZE = 100  # 批处理尺寸(batch_size)
     LR = 0.01  # 学习率
     # 数据集迭代器
@@ -39,7 +40,8 @@ if __name__ == '__main__':
     # 构建模型
     # net = models.Octresnet50(num_classes=10)
     # net = models.OctNet()
-    net = models.LeNet()
+    net = models.ghost_net()
+    print_network(net)
 
     #loss函数
     criterion = nn.CrossEntropyLoss()  # 损失函数为交叉熵，多用于多分类问题

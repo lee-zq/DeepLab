@@ -61,3 +61,9 @@ class ResNet(nn.Module):
 def ResNet18():
 
     return ResNet(ResidualBlock)
+
+if __name__ == '__main__':
+    in1 = torch.randn(4,3,32,32)
+    model = ResNet18()
+    out1 = model(in1)
+    print(out1.size())

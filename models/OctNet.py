@@ -25,3 +25,9 @@ class OctNet(nn.Module):
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
+
+if __name__ == '__main__':
+    model = OctNet()
+    inp= torch.randn(10,3,32,32)
+    oup = model(inp)
+    print(oup.size())
