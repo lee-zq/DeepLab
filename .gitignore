@@ -1,5 +1,6 @@
-.idea
-Data
-*/__pycache__/
+/.idea
+/Data
+**/__pycache__/
 output/test/*
-Bin
+/Bin
+/output/
