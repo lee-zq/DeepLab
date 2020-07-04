@@ -7,7 +7,7 @@ Modified from https://github.com/d-li14/mobilenetv3.pytorch
 import torch
 import torch.nn as nn
 import math
-from lib.nn.conv_layer import SELayer,depthwise_conv
+from models.layer.conv_layer import SELayer,depthwise_conv
 
 __all__ = ['ghost_net']
 

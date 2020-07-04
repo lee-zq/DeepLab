@@ -7,12 +7,11 @@ import torch.nn as nn
 import argparse, os
 from utils.common import Logger, print_network
 
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 if __name__ == '__main__':
 
-    # 命令行参数传递
+    # 命令行参数解析
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
     parser.add_argument('--outf', default='./output/test', help='folder to output images and model checkpoints')  # 输出结果保存路径
     args = parser.parse_args()
@@ -24,7 +23,7 @@ if __name__ == '__main__':
     EPOCH = 50  # 遍历数据集次数
     BATCH_SIZE = 100  # 批处理尺寸(batch_size)
     LR = 0.01  # 学习率
-    # 数据集迭代器
+    # 数据集迭代器 建议数据提前下载并放到./Data目录下
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
     trainset = torchvision.datasets.CIFAR10(root='./Data', train=True,
@@ -38,18 +37,21 @@ if __name__ == '__main__':
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
     # 构建模型
+    net = models.LeNet()
     # net = models.Octresnet50(num_classes=10)
     # net = models.OctNet()
-    net = models.ghost_net()
+    # net = models.ghost_net()
+    # net = models.DenseNet(num_classes=10)
+    # net = models.DeformLeNet()
     print_network(net)
 
     #loss函数
     criterion = nn.CrossEntropyLoss()  # 损失函数为交叉熵，多用于多分类问题
-    optimizer = optim.SGD(net.parameters(), lr=LR, momentum=0.9,weight_decay=5e-4) #优化方式为mini-batch momentum-SGD，并采用L2正则化（权重衰减）
+    optimizer = optim.SGD(net.parameters(), lr=LR, momentum=0.9,weight_decay=5e-4) # 优化方式为mini-batch momentum-SGD，并采用L2正则化（权重衰减）
     net.to(device)  # 转移到GPU
 
     # 训练过程
-    best_acc = 0.65  # 2 初始化best test accuracy
+    best_acc = 0.00  # 初始化best test accuracy
     print("Start Training!")  # 定义遍历数据集的次数
     for epoch in range(EPOCH):
         # 训练一个Epoch
@@ -58,10 +60,9 @@ if __name__ == '__main__':
         sum_loss = 0.0  # 每个Epoch将累加的loss、corrent和样本数归零
         correct = 0.0
         total = 0.0
-        for i, data in enumerate(trainloader, 0):  # 加载训练集
+        for i, (inputs,labels) in enumerate(trainloader):  # 加载训练集
             # 准备数据
             length = len(trainloader)
-            inputs, labels = data
             inputs, labels = inputs.to(device), labels.to(device)  # 训练数据导入到GPU
             optimizer.zero_grad()  # graph各节点grad置为0
 
@@ -81,7 +82,6 @@ if __name__ == '__main__':
                     % (epoch + 1, (i + 1 + epoch * length), sum_loss / (i + 1), 100. * correct.item() / total))  # 输出当前训练结果
 
         # 每训练完一个Epoch测试一下准确率
-        print("Waiting Test!")
         with torch.no_grad():  # 将pytorch置为不计算梯度模式
             correct = 0
             total = 0   # 计数归零（初始化）
@@ -94,7 +94,6 @@ if __name__ == '__main__':
                 _, predicted = torch.max(outputs.data, dim=1)  # 取得分最高的那个类 (outputs.data的索引号)
                 total += labels.size(0)                        # 累加样本总数
                 correct += (predicted == labels).sum().item()        # 累加预测正确的样本个数
-            print('Test Acc is: %.2f%%' % (100 * correct / total))
             acc = correct / total
 
             # 将最新的训练模型实时导出到文件
@@ -105,4 +104,5 @@ if __name__ == '__main__':
                 print('Saving best model......')
                 torch.save(net.state_dict(), '%s/net_best.pth' % (args.outf))
                 best_acc = acc
+            print('Test Acc is: %.2f%%' % (100*acc),'(Best Acc: %.2f%%)' % (100*best_acc))
     print("Training Finished, TotalEPOCH=%d" % EPOCH)

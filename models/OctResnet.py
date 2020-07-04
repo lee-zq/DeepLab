@@ -3,10 +3,9 @@
 # Author: Xiangtai Li(lxtpku@pku.edu.cn)
 # Pytorch Implementation of Octave Resnet
 # original code from: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
-
+from torch import nn
+from models.layer.OctConv import *
 __all__ = ['Octresnet50','Octresnet101']
-
-from lib.nn.OctConv import *
 
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1):

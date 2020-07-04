@@ -21,20 +21,23 @@ The `./train.py` can be used to train models contained in the `./models` module.
 │          data_batch_2
 │          ...
 ├─lib
-│  │  logger.py   # logger func
-│  │  utils.py 
 │  │  __init__.py
-│  │
-│  ├─nn
-│     │  OctConv.py   # cnn modules
-│     │  __init__.py
 │
-├─models              # CNN models
+├─models                  # cnn models
+│  │  DeformLeNet.py
+│  │  densenet.py
+│  │  GhostNet.py
 │  │  LeNet.py
 │  │  OctNet.py
 │  │  OctResnet.py
 │  │  ResNet18.py
 │  │  __init__.py
+│  │
+│  ├─layer                 # some common layer
+│     │  conv_layer.py
+│     │  deform_conv_v2.py
+│     │  OctConv.py
+│     │  __init__.py
 │
 ├─output               # trained model will be saved here
 │  └─test              # a sample
