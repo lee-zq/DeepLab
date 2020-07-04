@@ -21,7 +21,7 @@ The `./train.py` can be used to train models contained in the `./models` module.
 │          data_batch_2
 │          ...
 ├─lib
-│  │  __init__.py
+│  │  __init__.py         # No implement
 │
 ├─models                  # cnn models
 │  │  DeformLeNet.py
@@ -38,6 +38,9 @@ The `./train.py` can be used to train models contained in the `./models` module.
 │     │  deform_conv_v2.py
 │     │  OctConv.py
 │     │  __init__.py
+│
+│─utils
+│     │  common.py      # some tools,such as Logger func
 │
 ├─output               # trained model will be saved here
 │  └─test              # a sample
