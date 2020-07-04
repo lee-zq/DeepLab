@@ -173,6 +173,6 @@ if __name__=='__main__':
     model = ghost_net()
     model.eval()
     print(model)
-    input = torch.randn(32,3,224,224)
+    input = torch.randn(32,3,32,32)
     y = model(input)
     print(y.size())

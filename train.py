@@ -12,42 +12,51 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if __name__ == '__main__':
 
     # 命令行参数解析
-    parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-    parser.add_argument('--outf', default='./output/test', help='folder to output images and model checkpoints')  # 输出结果保存路径
+    parser = argparse.ArgumentParser("CNN backbone on cifar10")
+    parser.add_argument('--outf', default='./output/test_densenet', help='folder to output images and model checkpoints')  # 输出结果保存路径
     args = parser.parse_args()
     # 输入输出路径确认
     if not os.path.exists(args.outf):
         os.makedirs(args.outf)  # 创建输出文件夹
     sys.stdout = Logger(os.path.join(args.outf, 'train_log.txt'))  # 创建日志
     # 训练参数设置(可变参数建议用parser加载)
-    EPOCH = 50  # 遍历数据集次数
-    BATCH_SIZE = 100  # 批处理尺寸(batch_size)
+    EPOCH = 100  # 遍历数据集次数
+    BATCH_SIZE = 128  # 批处理尺寸(batch_size)
     LR = 0.01  # 学习率
     # 数据集迭代器 建议数据提前下载并放到./Data目录下
-    transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
     trainset = torchvision.datasets.CIFAR10(root='./Data', train=True,
-                                            download=False, transform=transform)
+                                            download=False, transform=transform_train)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE,
-                                              shuffle=True, num_workers=2)
+                                              shuffle=True, num_workers=4)
     testset = torchvision.datasets.CIFAR10(root='./Data', train=False,
-                                           download=False, transform=transform)
+                                           download=False, transform=transform_test)
     testloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE,
-                                             shuffle=False, num_workers=2)
+                                             shuffle=False, num_workers=4)
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
     # 构建模型
-    net = models.LeNet()
+    # net = models.LeNet()
     # net = models.Octresnet50(num_classes=10)
     # net = models.OctNet()
     # net = models.ghost_net()
-    # net = models.DenseNet(num_classes=10)
+    net = models.DenseNet(num_classes=10)
     # net = models.DeformLeNet()
     print_network(net)
 
     #loss函数
     criterion = nn.CrossEntropyLoss()  # 损失函数为交叉熵，多用于多分类问题
-    optimizer = optim.SGD(net.parameters(), lr=LR, momentum=0.9,weight_decay=5e-4) # 优化方式为mini-batch momentum-SGD，并采用L2正则化（权重衰减）
+    optimizer = optim.Adam(net.parameters(), lr=LR)
     net.to(device)  # 转移到GPU
 
     # 训练过程
