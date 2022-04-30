@@ -6,6 +6,7 @@ import torch.optim as optim
 import torch.nn as nn
 import argparse, os
 from utils.common import Logger, print_network
+from lib import CIFARDataset, FocalLoss
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -13,49 +14,43 @@ if __name__ == '__main__':
 
     # 命令行参数解析
     parser = argparse.ArgumentParser("CNN backbone on cifar10")
-    parser.add_argument('--outf', default='./output/test_densenet', help='folder to output images and model checkpoints')  # 输出结果保存路径
+    parser.add_argument('--resume', default='./output/test_resnet18_91.02/net_latest.pth', help='path of pretrained model weights')  # 加载预训练权重
+    parser.add_argument('--outf', default='./output/test_resnet18_10', help='folder to output images and model checkpoints')  # 输出结果保存路径
     args = parser.parse_args()
     # 输入输出路径确认
     if not os.path.exists(args.outf):
         os.makedirs(args.outf)  # 创建输出文件夹
     sys.stdout = Logger(os.path.join(args.outf, 'train_log.txt'))  # 创建日志
     # 训练参数设置(可变参数建议用parser加载)
-    EPOCH = 100  # 遍历数据集次数
-    BATCH_SIZE = 128  # 批处理尺寸(batch_size)
+    NUM_CLASS =10
+    EPOCH = 60  # 遍历数据集次数
+    BATCH_SIZE = 256  # 批处理尺寸(batch_size)
     LR = 0.01  # 学习率
-    # 数据集迭代器 建议数据提前下载并放到./Data目录下
-    transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
+    # 数据集迭代器 建议数据提前下载并放到./data目录下
+    data_path="./data"
+    if not os.path.exists(data_path):
+        os.makedirs(data_path)  # 创建数据集文件夹
+    dataset = CIFARDataset(dataset_path=data_path, batchsize=BATCH_SIZE)
+    #创建dataloader，注意dataloader的数据集要和NUM_CLASSES对应上
+    trainloader, testloader = dataset.get_cifar10_dataloader()
 
-    transform_test = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
-    trainset = torchvision.datasets.CIFAR10(root='./Data', train=True,
-                                            download=False, transform=transform_train)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE,
-                                              shuffle=True, num_workers=4)
-    testset = torchvision.datasets.CIFAR10(root='./Data', train=False,
-                                           download=False, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE,
-                                             shuffle=False, num_workers=4)
-    classes = ('plane', 'car', 'bird', 'cat', 'deer',
-               'dog', 'frog', 'horse', 'ship', 'truck')
     # 构建模型
-    # net = models.LeNet()
-    # net = models.Octresnet50(num_classes=10)
-    # net = models.OctNet()
+    # net = models.LeNet(num_classes=NUM_CLASS)
+    # net = models.Octresnet50(num_classes=NUM_CLASS)
+    # net = models.OctNet(num_classes)
     # net = models.ghost_net()
-    net = models.DenseNet(num_classes=10)
+    # net = models.DenseNet(num_classes=NUM_CLASS)
     # net = models.DeformLeNet()
+    net = models.ResNet18(num_classes=NUM_CLASS)
+    if args.resume:
+        print(f"load checkpoint file : {args.resume}")
+        checkpoint = torch.load(args.resume, map_location=device)
+        net.load_state_dict(checkpoint)
     print_network(net)
 
     #loss函数
     criterion = nn.CrossEntropyLoss()  # 损失函数为交叉熵，多用于多分类问题
+    # criterion = FocalLoss(class_num=NUM_CLASS)  # 损失函数为交叉熵，多用于多分类问题
     optimizer = optim.Adam(net.parameters(), lr=LR)
     net.to(device)  # 转移到GPU
 
@@ -91,11 +86,11 @@ if __name__ == '__main__':
                     % (epoch + 1, (i + 1 + epoch * length), sum_loss / (i + 1), 100. * correct.item() / total))  # 输出当前训练结果
 
         # 每训练完一个Epoch测试一下准确率
+        net.eval()  # 将net置为评估模式（反向传播=False）
         with torch.no_grad():  # 将pytorch置为不计算梯度模式
             correct = 0
             total = 0   # 计数归零（初始化）
             for data in testloader:  # 加载测试集
-                net.eval()  # 将net置为评估模式（反向传播=False）
                 images, labels = data
                 images, labels = images.to(device), labels.to(device)  # 测试数据导入GPU
                 outputs = net(images)  # 前向传播

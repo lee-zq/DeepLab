@@ -83,7 +83,7 @@ class GhostBottleneck(nn.Module):
 
 
 class GhostNet(nn.Module):
-    def __init__(self, cfgs, num_classes=10, width_mult=1.):
+    def __init__(self, cfgs, num_classes=100, width_mult=1.):
         super(GhostNet, self).__init__()
         # setting of inverted residual blocks
         self.cfgs = cfgs

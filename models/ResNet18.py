@@ -58,9 +58,9 @@ class ResNet(nn.Module):
         out = self.fc(out)
         return out
 
-def ResNet18():
+def ResNet18(num_classes=10):
 
-    return ResNet(ResidualBlock)
+    return ResNet(ResidualBlock, num_classes)
 
 if __name__ == '__main__':
     in1 = torch.randn(4,3,32,32)

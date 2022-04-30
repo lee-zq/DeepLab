@@ -2,7 +2,7 @@ import torch.nn.functional as F
 from models.layer.OctConv import *
 
 class OctNet(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes):
         """
         OctNet是将LeNet中的卷积替换为OctConv实现的net
         """
@@ -14,7 +14,7 @@ class OctNet(nn.Module):
         self.pool = nn.MaxPool2d(2, 2)
         self.fc1 = nn.Linear(128*4*4, 120)
         self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+        self.fc3 = nn.Linear(84, num_classes)
 
     def forward(self, x):  # x:  3,32,32
         x = self.convhead(x)   # 32,32,32 + 32,16,16
