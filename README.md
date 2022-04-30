@@ -11,7 +11,11 @@ The `./train.py` can be used to train models contained in the `./models` module.
   Many comments are written in the main function `.train.py` to facilitate the interpretation of the training process
 ## Code architecture
 ```
-│  train.py     # The training process and all parameters
+├─train.py     # The training stage and all parameters
+│
+├─test.py      # The testing stage demo
+│
+├─onnxruntime_demo.py     # The testing stage using inference lib:onnxruntime
 │
 ├─Data          # Downloaded dataset's location
 │  │
