@@ -14,8 +14,8 @@ if __name__ == '__main__':
 
     # 命令行参数解析
     parser = argparse.ArgumentParser("CNN backbone on cifar10")
-    parser.add_argument('--resume', default='./output/test_resnet18_91.02/net_latest.pth', help='path of pretrained model weights')  # 加载预训练权重
-    parser.add_argument('--outf', default='./output/test_resnet18_10', help='folder to output images and model checkpoints')  # 输出结果保存路径
+    parser.add_argument('--resume', default="./output/test_resnet18_10_autoaug2/net_latest.pth", help='path of pretrained model weights')  # 加载预训练权重
+    parser.add_argument('--outf', default='./output/test_resnet18_10_autoaug2', help='folder to output images and model checkpoints')  # 输出结果保存路径
     args = parser.parse_args()
     # 输入输出路径确认
     if not os.path.exists(args.outf):
@@ -23,9 +23,9 @@ if __name__ == '__main__':
     sys.stdout = Logger(os.path.join(args.outf, 'train_log.txt'))  # 创建日志
     # 训练参数设置(可变参数建议用parser加载)
     NUM_CLASS =10
-    EPOCH = 60  # 遍历数据集次数
+    EPOCH = 80  # 遍历数据集次数
     BATCH_SIZE = 256  # 批处理尺寸(batch_size)
-    LR = 0.01  # 学习率
+    LR = 0.001  # 学习率
     # 数据集迭代器 建议数据提前下载并放到./data目录下
     data_path="./data"
     if not os.path.exists(data_path):
@@ -52,6 +52,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()  # 损失函数为交叉熵，多用于多分类问题
     # criterion = FocalLoss(class_num=NUM_CLASS)  # 损失函数为交叉熵，多用于多分类问题
     optimizer = optim.Adam(net.parameters(), lr=LR)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[EPOCH//4, EPOCH*2//4, EPOCH*3//4], gamma=0.1)
     net.to(device)  # 转移到GPU
 
     # 训练过程
@@ -59,7 +60,7 @@ if __name__ == '__main__':
     print("Start Training!")  # 定义遍历数据集的次数
     for epoch in range(EPOCH):
         # 训练一个Epoch
-        print('\nTraining Epoch: %d' % (epoch + 1))
+        print("\nTraining Epoch: {} | lr={}".format(epoch+1,scheduler.get_last_lr()[0]))
         net.train()  # 将net置为train模式（反向传播=True）
         sum_loss = 0.0  # 每个Epoch将累加的loss、corrent和样本数归零
         correct = 0.0
@@ -109,4 +110,5 @@ if __name__ == '__main__':
                 torch.save(net.state_dict(), '%s/net_best.pth' % (args.outf))
                 best_acc = acc
             print('Test Acc is: %.2f%%' % (100*acc),'(Best Acc: %.2f%%)' % (100*best_acc))
-    print("Training Finished, TotalEPOCH=%d" % EPOCH)
+        scheduler.step() #更新下一个epoch的学习率
+    print("Training Finished, Total_EPOCH=%d" % EPOCH)

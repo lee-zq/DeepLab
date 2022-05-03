@@ -1,10 +1,11 @@
 import models
+from tqdm import tqdm
 import torch, sys
 import torchvision
 import torchvision.transforms as transforms
 import torch.optim as optim
 import torch.nn as nn
-import argparse, os
+import argparse, os, time
 from utils.common import Logger, print_network
 from lib import CIFARDataset
 
@@ -16,7 +17,7 @@ def test(net, testloader):
     with torch.no_grad():  # 将pytorch置为不计算梯度模式
         correct = 0
         total = 0   # 计数归零（初始化）
-        for data in testloader:  # 加载测试集
+        for i, data in tqdm(enumerate(testloader), total=len(testloader)):  # 加载测试集
             images, labels = data
             images, labels = images.to(device), labels.to(device)  # 测试数据导入GPU
             outputs = net(images)  # 前向传播
@@ -24,7 +25,7 @@ def test(net, testloader):
             total += labels.size(0)                        # 累加样本总数
             correct += (predicted == labels).sum().item()        # 累加预测正确的样本个数
         acc = correct / total
-    print('Test Acc is: %.2f%%' % (100*acc),'(Best Acc: %.2f%%)' % (100*best_acc))
+    print('Test Acc is: %.2f%%' % (100*acc))
 
 def export_onnx(net, testloader, output_file):
     net.eval()
@@ -49,11 +50,11 @@ def export_onnx(net, testloader, output_file):
 if __name__ == '__main__':
     # 命令行参数解析
     parser = argparse.ArgumentParser("CNN backbone on cifar10")
-    parser.add_argument('--checkpoint', default='./output/test_densenet/net_best.pth') 
+    parser.add_argument('--checkpoint', default='./output/test_resnet18_10_autoaug/net_best.pth') 
     args = parser.parse_args()
 
     NUM_CLASS =10
-    BATCH_SIZE = 128  # 批处理尺寸(batch_size)
+    BATCH_SIZE = 1  # 批处理尺寸(batch_size)
 
     # 数据集迭代器
     data_path="./data"
@@ -73,8 +74,12 @@ if __name__ == '__main__':
     net.to(device)  # 转移到GPU
     
     #测试推理
-    # test(net, testloader)
+    start = time.time()
+    test(net, testloader)
+    end = time.time()
+    print(f"Average response time cost: {1000*(end-start)/len(testloader.dataset)} ms")
+
     #导出onnx模型
-    output_file = "./output/test_densenet/densenet_best.onnx"
+    output_file = "./output/test_resnet18_10_autoaug/densenet_best.onnx"
     export_onnx(net.cpu(), testloader, output_file)
 

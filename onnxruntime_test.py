@@ -1,6 +1,7 @@
 import numpy as np
 import onnxruntime as ort
-import argparse, os
+import argparse, os, time
+from tqdm import tqdm
 from lib import CIFARDataset
 
 def onnxruntime_test(session, testloader):
@@ -8,7 +9,7 @@ def onnxruntime_test(session, testloader):
     input_name = session.get_inputs()[0].name
     correct = 0
     total = 0   # 计数归零（初始化）
-    for data in testloader:
+    for i, data in tqdm(enumerate(testloader), total=len(testloader)):  # 加载测试集
         images, labels = data
         images, labels = images.numpy(), labels.numpy()
         outputs = session.run(None, {input_name:images})
@@ -21,7 +22,7 @@ def onnxruntime_test(session, testloader):
 if __name__ == '__main__':
     # 命令行参数解析
     parser = argparse.ArgumentParser("CNN backbone on cifar10")
-    parser.add_argument('--onnx', default='./output/test_densenet/densenet_best.onnx')
+    parser.add_argument('--onnx', default='./output/test_resnet18_10_autoaug/densenet_best.onnx')
     args = parser.parse_args()
 
     NUM_CLASS =10
@@ -36,4 +37,7 @@ if __name__ == '__main__':
     sess = ort.InferenceSession(args.onnx, providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
 
     #onnxruntime推理
+    start = time.time()
     onnxruntime_test(sess, testloader)
+    end = time.time()
+    print(f"Average response time cost: {1000*(end-start)/len(testloader.dataset)} ms")
