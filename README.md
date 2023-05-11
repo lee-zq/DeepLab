@@ -1,4 +1,4 @@
-# CNN-backbone
+# CNN-backbone  v1.0封版
 This is a summary repository of the sota backbone of the CNNs
 ## Quickly start
 ### 1. Download CIFAR-10 Dataset
