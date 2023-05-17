@@ -1,5 +1,5 @@
 import torch.nn.functional as F
-from models.layer.OctConv import *
+from lib.module.layer.OctConv import *
 
 class OctNet(nn.Module):
     def __init__(self, num_classes):

@@ -1,22 +1,24 @@
-import models
 import torch, sys
 import torchvision
 import torchvision.transforms as transforms
 import torch.optim as optim
 import torch.nn as nn
 import argparse, os
-from utils.common import Logger, print_network
-from lib import CIFARDataset, FocalLoss
+from lib.utils.common import Logger, print_network
+from . import models
+from lib.utils.common import Logger, print_network
+from lib import CIFARDataset
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-if __name__ == '__main__':
+def main(args):
 
     # 命令行参数解析
-    parser = argparse.ArgumentParser("CNN backbone on cifar10")
-    parser.add_argument('--resume', default="./output/test_resnet18_10_autoaug2/net_latest.pth", help='path of pretrained model weights')  # 加载预训练权重
-    parser.add_argument('--outf', default='./output/test_resnet18_10_autoaug2', help='folder to output images and model checkpoints')  # 输出结果保存路径
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser("CNN backbone on cifar10")
+    # parser.add_argument('--resume', default="./output/test_resnet18_10_autoaug2/net_latest.pth", help='path of pretrained model weights')  # 加载预训练权重
+    # parser.add_argument('--outf', default='./output/test_resnet18_10_autoaug2', help='folder to output images and model checkpoints')  # 输出结果保存路径
+    # args = parser.parse_args()
+    
+    device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
+
     # 输入输出路径确认
     if not os.path.exists(args.outf):
         os.makedirs(args.outf)  # 创建输出文件夹
@@ -27,7 +29,7 @@ if __name__ == '__main__':
     BATCH_SIZE = 256  # 批处理尺寸(batch_size)
     LR = 0.001  # 学习率
     # 数据集迭代器 建议数据提前下载并放到./data目录下
-    data_path="./data"
+    data_path="./datasets/cifar10"
     if not os.path.exists(data_path):
         os.makedirs(data_path)  # 创建数据集文件夹
     dataset = CIFARDataset(dataset_path=data_path, batchsize=BATCH_SIZE)
@@ -39,9 +41,9 @@ if __name__ == '__main__':
     # net = models.Octresnet50(num_classes=NUM_CLASS)
     # net = models.OctNet(num_classes)
     # net = models.ghost_net()
-    # net = models.DenseNet(num_classes=NUM_CLASS)
+    net = models.DenseNet(num_classes=NUM_CLASS)
     # net = models.DeformLeNet()
-    net = models.ResNet18(num_classes=NUM_CLASS)
+    # net = models.ResNet18(num_classes=NUM_CLASS)
     if args.resume:
         print(f"load checkpoint file : {args.resume}")
         checkpoint = torch.load(args.resume, map_location=device)

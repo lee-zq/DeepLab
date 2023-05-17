@@ -1,4 +1,3 @@
-import models
 from tqdm import tqdm
 import torch, sys
 import torchvision
@@ -6,12 +5,13 @@ import torchvision.transforms as transforms
 import torch.optim as optim
 import torch.nn as nn
 import argparse, os, time
-from utils.common import Logger, print_network
+from . import models
+
+from lib.utils.common import Logger, print_network
 from lib import CIFARDataset
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def test(net, testloader):
+def test(net, testloader, device):
     print("Start Testing!")
     net.eval()  # 将net置为评估模式（反向传播=False）
     with torch.no_grad():  # 将pytorch置为不计算梯度模式
@@ -47,17 +47,18 @@ def export_onnx(net, testloader, output_file):
             
 
 
-if __name__ == '__main__':
+def main(args):
     # 命令行参数解析
-    parser = argparse.ArgumentParser("CNN backbone on cifar10")
-    parser.add_argument('--checkpoint', default='./output/test_resnet18_10_autoaug/net_best.pth') 
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser("CNN backbone on cifar10")
+    # parser.add_argument('--checkpoint', default='./output/test_resnet18_10_autoaug/net_best.pth') 
+    # args = parser.parse_args()
+    device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
 
     NUM_CLASS =10
     BATCH_SIZE = 1  # 批处理尺寸(batch_size)
 
     # 数据集迭代器
-    data_path="./data"
+    data_path="./datasets/cifar10"
     dataset = CIFARDataset(dataset_path=data_path, batchsize=BATCH_SIZE)
     _, testloader = dataset.get_cifar10_dataloader()
 
@@ -66,20 +67,20 @@ if __name__ == '__main__':
     # net = models.Octresnet50(num_classes=NUM_CLASS)
     # net = models.OctNet(num_classes)
     # net = models.ghost_net()
-    # net = models.DenseNet(num_classes=NUM_CLASS)
+    net = models.DenseNet(num_classes=NUM_CLASS)
     # net = models.DeformLeNet()
-    net = models.ResNet18()
+    # net = models.ResNet18()
     print_network(net)
-    net.load_state_dict(state_dict=torch.load(args.checkpoint))
+    net.load_state_dict(state_dict=torch.load(args.outf + "/net_best.pth"))
     net.to(device)  # 转移到GPU
     
     #测试推理
     start = time.time()
-    test(net, testloader)
+    test(net, testloader, device)
     end = time.time()
     print(f"Average response time cost: {1000*(end-start)/len(testloader.dataset)} ms")
 
     #导出onnx模型
-    output_file = "./output/test_resnet18_10_autoaug/densenet_best.onnx"
+    output_file = args.outf + "/net_best.onnx"
     export_onnx(net.cpu(), testloader, output_file)
 

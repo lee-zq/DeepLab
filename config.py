@@ -4,7 +4,7 @@ def global_parse_args():
     parser = argparse.ArgumentParser()
 
     # in/out
-    parser.add_argument('--outf', default='./experiments',
+    parser.add_argument('--outf', default='./experiments/cls_dense_net',
                         help='trained model will be saved at here')
     parser.add_argument('--name', default='default_name',
                         help='save name of experiment in args.outf directory')

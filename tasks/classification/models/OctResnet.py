@@ -4,7 +4,7 @@
 # Pytorch Implementation of Octave Resnet
 # original code from: https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 from torch import nn
-from models.layer.OctConv import *
+from lib.module.layer.OctConv import *
 __all__ = ['Octresnet50','Octresnet101']
 
 
