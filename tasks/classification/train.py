@@ -25,14 +25,13 @@ def main(args):
     sys.stdout = Logger(os.path.join(args.outf, 'train_log.txt'))  # 创建日志
     # 训练参数设置(可变参数建议用parser加载)
     NUM_CLASS =10
-    EPOCH = 80  # 遍历数据集次数
-    BATCH_SIZE = 256  # 批处理尺寸(batch_size)
+
     LR = 0.001  # 学习率
     # 数据集迭代器 建议数据提前下载并放到./data目录下
-    data_path="./datasets/cifar10"
+    data_path=args.train_data_path
     if not os.path.exists(data_path):
         os.makedirs(data_path)  # 创建数据集文件夹
-    dataset = CIFARDataset(dataset_path=data_path, batchsize=BATCH_SIZE)
+    dataset = CIFARDataset(dataset_path=data_path, batchsize=args.batch_size)
     #创建dataloader，注意dataloader的数据集要和NUM_CLASSES对应上
     trainloader, testloader = dataset.get_cifar10_dataloader()
 
@@ -44,23 +43,23 @@ def main(args):
     net = models.DenseNet(num_classes=NUM_CLASS)
     # net = models.DeformLeNet()
     # net = models.ResNet18(num_classes=NUM_CLASS)
-    if args.resume:
-        print(f"load checkpoint file : {args.resume}")
-        checkpoint = torch.load(args.resume, map_location=device)
+    if args.checkpoint:
+        print(f"load checkpoint file : {args.checkpoint}")
+        checkpoint = torch.load(args.checkpoint, map_location=device)
         net.load_state_dict(checkpoint)
     print_network(net)
 
     #loss函数
     criterion = nn.CrossEntropyLoss()  # 损失函数为交叉熵，多用于多分类问题
     # criterion = FocalLoss(class_num=NUM_CLASS)  # 损失函数为交叉熵，多用于多分类问题
-    optimizer = optim.Adam(net.parameters(), lr=LR)
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[EPOCH//4, EPOCH*2//4, EPOCH*3//4], gamma=0.1)
+    optimizer = optim.Adam(net.parameters(), lr=args.lr)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[args.n_epochs//4, args.n_epochs*2//4, args.n_epochs*3//4], gamma=0.1)
     net.to(device)  # 转移到GPU
 
     # 训练过程
     best_acc = 0.00  # 初始化best test accuracy
     print("Start Training!")  # 定义遍历数据集的次数
-    for epoch in range(EPOCH):
+    for epoch in range(args.n_epochs):
         # 训练一个Epoch
         print("\nTraining Epoch: {} | lr={}".format(epoch+1,scheduler.get_last_lr()[0]))
         net.train()  # 将net置为train模式（反向传播=True）
@@ -113,4 +112,4 @@ def main(args):
                 best_acc = acc
             print('Test Acc is: %.2f%%' % (100*acc),'(Best Acc: %.2f%%)' % (100*best_acc))
         scheduler.step() #更新下一个epoch的学习率
-    print("Training Finished, Total_EPOCH=%d" % EPOCH)
+    print("Training Finished, Total_args.n_epochs=%d" % args.n_epochs)

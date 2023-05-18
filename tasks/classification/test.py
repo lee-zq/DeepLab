@@ -54,12 +54,9 @@ def main(args):
     # args = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
 
-    NUM_CLASS =10
-    BATCH_SIZE = 1  # 批处理尺寸(batch_size)
-
     # 数据集迭代器
-    data_path="./datasets/cifar10"
-    dataset = CIFARDataset(dataset_path=data_path, batchsize=BATCH_SIZE)
+    data_path=args.test_data_path
+    dataset = CIFARDataset(dataset_path=data_path, batchsize=1)
     _, testloader = dataset.get_cifar10_dataloader()
 
     # 构建模型
@@ -67,7 +64,7 @@ def main(args):
     # net = models.Octresnet50(num_classes=NUM_CLASS)
     # net = models.OctNet(num_classes)
     # net = models.ghost_net()
-    net = models.DenseNet(num_classes=NUM_CLASS)
+    net = models.DenseNet(num_classes=args.batch_size)
     # net = models.DeformLeNet()
     # net = models.ResNet18()
     print_network(net)

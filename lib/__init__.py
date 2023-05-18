@@ -1,3 +1,3 @@
-from .dataset.dataset import CIFARDataset
+from .dataset.cls_dataset import CIFARDataset
 
 from .loss.loss import FocalLoss
